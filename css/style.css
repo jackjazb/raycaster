@@ -1,0 +1,10 @@
+body{
+	margin: 30px;
+	font-family: monospace;
+	line-height: 2px;
+}
+
+canvas{
+	border: 1px solid black;
+	margin-bottom: 30px;
+}
