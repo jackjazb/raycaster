@@ -5,35 +5,41 @@ var player;
 var fov = Math.PI / 1.7;
 
 var wall = new Image();
-wall.src ='./textures/wall.png'; //'minig.jpg'; 
+wall.src ='./textures/wall.png';
+
+var enemyTex = new Image();
+enemyTex.src = './textures/enemy.png';
 
 var map = [
 	[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
 	[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
 	[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
 	[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-	[1,0,0,0,0,0,1,1,1,1,1,0,0,0,0,1,0,1,0,1,0,0,0,1],
-	[1,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1],
-	[1,0,0,0,0,0,1,0,0,0,1,0,0,0,0,1,0,0,0,1,0,0,0,1],
-	[1,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1],
-	[1,0,0,0,0,0,1,1,0,1,1,0,0,0,0,1,0,1,0,1,0,0,0,1],
-	[1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1],
-	[1,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,1],
-	[1,0,0,0,0,0,0,0,0,1,1,1,1,0,0,1,1,1,1,1,0,0,0,1],
+	[1,1,1,1,0,0,1,1,1,1,1,0,0,0,0,1,0,1,0,1,0,0,0,1],
+	[1,1,0,1,1,1,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1],
+	[1,1,0,0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,1,0,0,0,1],
+	[1,1,0,1,1,1,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1],
+	[1,1,1,1,0,0,1,1,0,1,1,0,0,0,0,1,0,1,0,1,0,0,0,1],
+	[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+	[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+	[1,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1],
 	[1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,1],
-	[1,0,0,0,0,0,0,0,0,1,0,1,1,0,0,1,1,1,0,1,0,0,0,1],
-	[1,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,1,0,1,0,0,0,1],
-	[1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,1],
-	[1,1,1,1,1,1,1,1,1,0,0,0,1,0,1,1,1,1,0,1,0,0,0,1],
-	[1,0,0,0,0,0,0,0,1,0,0,0,1,0,1,0,0,1,0,1,0,0,0,1],
-	[1,0,0,0,0,0,0,0,1,0,0,0,1,1,1,0,0,1,0,1,0,0,0,1],
-	[1,0,0,1,0,0,0,0,1,0,0,0,0,0,0,0,0,1,0,1,0,0,0,1],
-	[1,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,0,0,0,1],
-	[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1],
+	[1,0,0,0,0,0,0,0,0,1,0,1,1,0,0,0,1,1,0,1,0,0,0,1],
+	[1,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,1,0,1,0,0,0,1],
+	[1,1,1,1,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,1,0,0,0,1],
+	[1,1,1,1,0,0,1,1,1,1,0,1,0,0,0,0,0,1,0,1,0,0,0,1],
+	[1,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,1,0,0,0,1],
+	[1,0,0,0,0,0,0,0,1,1,0,1,0,0,0,0,0,1,0,1,0,0,0,1],
+	[1,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,1,0,0,0,1],
+	[1,0,0,1,0,1,0,0,1,1,0,1,0,1,0,1,0,1,0,1,0,0,0,1],
+	[1,0,1,0,0,0,1,0,1,1,0,0,0,0,0,0,0,0,0,1,0,0,0,1],
+	[1,0,0,1,0,1,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,1],
 	[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
 	[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
 ];
 
+var sprites = [new Enemy(10, 10, enemyTex)];
+console.log(sprites);
 
 //debug toggle
 var debug = false;
@@ -63,14 +69,15 @@ function Player(x, y, angle, fov) {
 	var rayIncrement = 0.01;
 	//change decrease column count
 	this.barFxVal = 1;
-
+	//contains the distance to each wall slice
+	this.zBuffer = [];
+	
 	//
 	//CONTROL
 	//
 	//update the player's position and rotation
 	this.update = function () {
 		//this.barFxVal += 0.01;
-
 		//rotate the player
 		if (this.left) {
 			this.angle -= turnSpeed;
@@ -118,7 +125,9 @@ function Player(x, y, angle, fov) {
 	this.drawScreen = function () {
 		//the player's distance from the viewing plane
 		var distFromPlane = (canvas.width / 2) / Math.tan(this.fov / 2);
-
+		
+		//reset the zbuffer
+		this.zBuffer = [];
 		//iterate over columns on the viewing plane
 		for (x = 0; x < canvas.width; x += this.barFxVal) {
 			//calculate the position of this ray relative to the center (ie the value of opp)
@@ -126,13 +135,14 @@ function Player(x, y, angle, fov) {
 
 			//cast a ray relative to the player
 			var rayAngle = this.angle + (Math.atan(distFromCenter / distFromPlane));
-			var rayData = this.castRay(rayAngle);
-
+			var ray = this.castRay(rayAngle);
+			
+			this.zBuffer.push(ray.distance);
 			//the x position of the texture slice to take, based on the percentage through the wall this ray is
-			var wallSlice = (wall.width - 1) * Math.abs(rayData.offset);
+			var wallSlice = (wall.width - 1) * Math.abs(ray.offset);
 
 			//the dimensions of the column to be drawn
-			var columnHeight = canvas.height / rayData.distance / 1.7;
+			var columnHeight = canvas.height / ray.distance / 1.7;
 			var columnY = (canvas.height - columnHeight) / 2;
 
 			//draw the slice
@@ -140,7 +150,7 @@ function Player(x, y, angle, fov) {
 
 			//draw a coloured column instead
 			var lineWidth = 0.05;
-			var side = rayData.side;
+			var side = ray.side;
 
 			//two colored mode, will be deleted later
 			ctx.fillStyle = 'black';
@@ -148,13 +158,13 @@ function Player(x, y, angle, fov) {
 				ctx.fillStsyle = 'purple';
 			}
 			else if (side == 'horizontal') {
-				ctx.fillStyle = 'orange'; //'rgb(' + parseFloat(240/distanceToWall) + ',0,0)';//'rgba(0,0,0' + parseFloat(1 - (0.5 / distanceToWall))+')';			
+				ctx.fillStyle = 'orange';			
 			}
 			//ctx.fillRect(x, columnY, 1, columnHeight);
 
 			//debugging thing - shows the distance returned by each ray
 			ctx.fillStyle = 'rgba(0, 0, 255, 0.5)';
-			if(debug)ctx.fillRect(x, (canvas.height - (rayData.distance * 20)) /2 , 1, rayData.distance * 20)
+			if(debug)ctx.fillRect(x, (canvas.height - (ray.distance * 20)) /2 , 1, ray.distance * 20)
 		}
 		//cast a test ray in order to show certain data about what is being looked at
 		var midRay = this.castRay(this.angle);
@@ -215,7 +225,7 @@ function Player(x, y, angle, fov) {
 	//draw the hud
 	this.drawHud = function () {
 		ctx.fillStyle = 'black';
-		ctx.fillRect(canvas.width / 2, canvas.height / 2, 5, 5);
+		ctx.fillRect(canvas.width / 2, canvas.height / 2, canvas.height * 0.01, canvas.height * 0.01);
 	};
 	//
 	//DEBUGGING
@@ -250,14 +260,14 @@ function Player(x, y, angle, fov) {
 		var relPlayerY = yPos + (player.y * gridWidth);
 
 		//the length of the angle indicator
-		var dirArrLength = 10;
+		var dirArrLength = gridWidth * 1.5;
 
 		//draw a dot for the player
 		ctx.beginPath();
-		ctx.arc(relPlayerX, relPlayerY, 1, 0, 2 * Math.PI, false);
+		ctx.arc(relPlayerX, relPlayerY, gridWidth / 5, 0, 2 * Math.PI, false);
 		ctx.fillStyle = 'purple';
 		ctx.fill();
-		ctx.lineWidth = 5;
+		ctx.lineWidth = gridWidth/2;
 		ctx.strokeStyle = 'purple';
 		ctx.stroke();
 
@@ -279,9 +289,6 @@ function Enemy(x, y, image) {
 	this.y = y;
 	this.image = image;
 
-	this.checkDraw = function(){
-		
-	}
 }
 
 
@@ -290,7 +297,7 @@ function Enemy(x, y, image) {
 //
 function initialise(){
 	//create a new player object
-	player = new Player(10, 12.5, Math.PI / 2, fov);
+	player = new Player(14.5,18.5 ,0, fov);
 	
 	//set up key bindings
 	initControls();
@@ -329,8 +336,8 @@ function initControls(){
 
 //set the resoloution of the canvas
 function setSize(){
-	ctx.canvas.width = window.innerWidth * 0.8;
-	ctx.canvas.height = window.innerHeight * 0.8;
+	ctx.canvas.width = window.innerWidth * 0.5;
+	ctx.canvas.height = window.innerHeight * 0.5;
 }
 //
 //RUN EVERY FRAME
