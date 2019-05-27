@@ -105,11 +105,11 @@ function Player(x, y, angle, fov) {
 		}
 		//debugging info
 		if (debug)
-			info += '<p>player pos: (' + parseFloat(this.x).toFixed(3) + ', ' + parseFloat(this.y).toFixed(3) + ')</p>';
+			info += '<p>PLAYER POS:  (' + parseFloat(this.x).toFixed(3) + ', ' + parseFloat(this.y).toFixed(3) + ')</p>';
 		if (debug)
-			info += '<p>angle: ' + parseFloat(this.angle).toFixed(4) + '</p>';
+			info += '<p>ANGLE: ' + parseFloat(this.angle).toFixed(4) + '</p>';
 		if (debug)
-			info += '<p>fov: ' + parseFloat(this.fov).toFixed(4) + '</p>';
+			info += '<p>FOV: ' + parseFloat(this.fov).toFixed(4) + '</p>';
 	};
 	//
 	//RENDERING
@@ -154,10 +154,11 @@ function Player(x, y, angle, fov) {
 
 			//debugging thing - shows the distance returned by each ray
 			ctx.fillStyle = 'rgba(0, 0, 255, 0.5)';
-			if(debug )ctx.fillRect(x, (canvas.height - (rayData.distance * 20)) /2 , 1, rayData.distance * 20)
+			if(debug)ctx.fillRect(x, (canvas.height - (rayData.distance * 20)) /2 , 1, rayData.distance * 20)
 		}
 		//cast a test ray in order to show certain data about what is being looked at
 		var midRay = this.castRay(this.angle);
+		
 		if (debug)
 			info += '<p>CENTRE RAY: dist: ' + parseFloat(midRay.distance).toFixed(3) + ', offset: ' + parseFloat(midRay.offset).toFixed(3) + ', side: ' + midRay.side + '</p>';
 	};
@@ -293,7 +294,7 @@ function initialise(){
 	
 	//set up key bindings
 	initControls();
-	
+	setSize();
 	player.drawScreen();
 	
 	//start the main game loop
@@ -311,6 +312,8 @@ function initControls(){
 		if(key == 68){player.right = true;}
 
 		if(key == 16){player.sprint = true;}
+		
+		if(key == 113){if(debug){debug = false;}else{debug = true;}}
 	}
 	
 	window.onkeyup = function(e){
@@ -324,23 +327,32 @@ function initControls(){
 	} 
 }
 
+//set the resoloution of the canvas
+function setSize(){
+	ctx.canvas.width = window.innerWidth * 0.8;
+	ctx.canvas.height = window.innerHeight * 0.8;
+}
 //
 //RUN EVERY FRAME
 //
 function update(){
 	info = '';
+	
 	//update the player
 	player.update();
-	
+
 	//redraw the screen
 	player.drawScreen();
 	player.drawHud();
 
 	//redraw the map
-	player.drawMap(10, 10, 250);		
+	player.drawMap(10, 10, ctx.canvas.height * 0.3);
+		
 }
 
 function mainLoop(){
+	setSize();
+
 	//draw over the last frame
 	ctx.fillStyle = 'skyblue';
 	ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -359,9 +371,4 @@ function mainLoop(){
 	requestAnimationFrame(mainLoop);
 }
 
-//debugging controls
-$('#debug').click(function(){
-	if(debug) debug = false;
-	else if(!debug) debug = true;
-});
 initialise();
