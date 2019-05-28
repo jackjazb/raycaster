@@ -1,6 +1,9 @@
 var canvas = document.getElementById('canvas');
 var ctx = canvas.getContext('2d');
 
+//resolution relative to monitor res
+var res = 0.7;
+
 var player;
 var fov = Math.PI / 1.7;
 
@@ -15,11 +18,11 @@ var map = [
 	[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
 	[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
 	[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-	[1,1,1,1,0,0,1,1,1,1,1,0,0,0,0,1,0,1,0,1,0,0,0,1],
+	[1,1,1,1,0,0,1,1,1,1,1,0,0,0,1,0,1,0,1,0,0,0,0,1],
 	[1,1,0,1,1,1,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1],
-	[1,1,0,0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,1,0,0,0,1],
+	[1,1,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,0,1],
 	[1,1,0,1,1,1,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1],
-	[1,1,1,1,0,0,1,1,0,1,1,0,0,0,0,1,0,1,0,1,0,0,0,1],
+	[1,1,1,1,0,0,1,1,0,1,1,0,0,0,1,0,1,0,1,0,0,0,0,1],
 	[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
 	[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
 	[1,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1],
@@ -39,7 +42,6 @@ var map = [
 ];
 
 var sprites = [new Enemy(10, 10, enemyTex)];
-console.log(sprites);
 
 //debug toggle
 var debug = false;
@@ -59,42 +61,48 @@ function Player(x, y, angle, fov) {
 	var speed = 0.03;
 	var sprintSpeed = 0.05;
 	var currentSpeed = speed;
+	
 	//movement flags
 	this.forward = false;
 	this.back = false;
 	this.right = false;
 	this.left = false;
 	this.sprint = false;
-	//corresponds roughly to rendering quality
+	
 	var rayIncrement = 0.01;
+	
 	//change decrease column count
 	this.barFxVal = 1;
-	//contains the distance to each wall slice
+	
 	this.zBuffer = [];
 	
 	//
 	//CONTROL
 	//
-	//update the player's position and rotation
-	this.update = function () {
-		//this.barFxVal += 0.01;
-		//rotate the player
-		if (this.left) {
-			this.angle -= turnSpeed;
-		}
-		if (this.right) {
-			this.angle += turnSpeed;
-		}
+	this.update = function (delta) {
+		//get a usable delta value
+		var deltaNow = delta * 0.1;
+		
 		//move forward and backwards
 		if (this.sprint) {
-			currentSpeed = sprintSpeed;
+			currentSpeed = sprintSpeed * deltaNow;
 		}
 		else {
-			currentSpeed = speed;
+			currentSpeed = speed * deltaNow;
 		}
-		//the next vector of the player
+		
+		//rotate the player
+		if (this.left) {
+			this.angle -= turnSpeed * deltaNow;
+		}
+		if (this.right) {
+			this.angle += turnSpeed * deltaNow;
+		}
+
+		
 		var nextX = 0;
 		var nextY = 0;
+		
 		if (this.forward) {
 			nextX = this.x + currentSpeed * Math.sin(this.angle);
 			nextY = this.y + currentSpeed * -Math.cos(this.angle);
@@ -103,6 +111,7 @@ function Player(x, y, angle, fov) {
 			nextX = this.x - currentSpeed * Math.sin(this.angle);
 			nextY = this.y - currentSpeed * -Math.cos(this.angle);
 		}
+		
 		//check the new positions for collision
 		if (map[Math.floor(this.y)][Math.floor(nextX)] == 0) {
 			this.x = nextX;
@@ -110,14 +119,13 @@ function Player(x, y, angle, fov) {
 		if (map[Math.floor(nextY)][Math.floor(this.x)] == 0) {
 			this.y = nextY;
 		}
-		//debugging info
-		if (debug)
-			info += '<p>PLAYER POS:  (' + parseFloat(this.x).toFixed(3) + ', ' + parseFloat(this.y).toFixed(3) + ')</p>';
-		if (debug)
-			info += '<p>ANGLE: ' + parseFloat(this.angle).toFixed(4) + '</p>';
-		if (debug)
-			info += '<p>FOV: ' + parseFloat(this.fov).toFixed(4) + '</p>';
+		
+
+		info += '<p>PLAYER POS:  (' + parseFloat(this.x).toFixed(3) + ', ' + parseFloat(this.y).toFixed(3) + ')</p>';
+		info += '<p>ANGLE: ' + parseFloat(this.angle).toFixed(4) + '</p>';
+		info += '<p>FOV: ' + parseFloat(this.fov).toFixed(4) + '</p>';
 	};
+	
 	//
 	//RENDERING
 	//
@@ -126,8 +134,8 @@ function Player(x, y, angle, fov) {
 		//the player's distance from the viewing plane
 		var distFromPlane = (canvas.width / 2) / Math.tan(this.fov / 2);
 		
-		//reset the zbuffer
 		this.zBuffer = [];
+		
 		//iterate over columns on the viewing plane
 		for (x = 0; x < canvas.width; x += this.barFxVal) {
 			//calculate the position of this ray relative to the center (ie the value of opp)
@@ -137,7 +145,9 @@ function Player(x, y, angle, fov) {
 			var rayAngle = this.angle + (Math.atan(distFromCenter / distFromPlane));
 			var ray = this.castRay(rayAngle);
 			
+			//add the returned distanc to the zbuffer
 			this.zBuffer.push(ray.distance);
+			
 			//the x position of the texture slice to take, based on the percentage through the wall this ray is
 			var wallSlice = (wall.width - 1) * Math.abs(ray.offset);
 
@@ -145,51 +155,37 @@ function Player(x, y, angle, fov) {
 			var columnHeight = canvas.height / ray.distance / 1.7;
 			var columnY = (canvas.height - columnHeight) / 2;
 
-			//draw the slice
 			ctx.drawImage(wall, wallSlice, 0, 1, wall.height, x, columnY, 1, columnHeight);
-
-			//draw a coloured column instead
-			var lineWidth = 0.05;
-			var side = ray.side;
-
-			//two colored mode, will be deleted later
-			ctx.fillStyle = 'black';
-			if (side == 'vertical') {
-				ctx.fillStsyle = 'purple';
-			}
-			else if (side == 'horizontal') {
-				ctx.fillStyle = 'orange';			
-			}
-			//ctx.fillRect(x, columnY, 1, columnHeight);
 
 			//debugging thing - shows the distance returned by each ray
 			ctx.fillStyle = 'rgba(0, 0, 255, 0.5)';
-			if(debug)ctx.fillRect(x, (canvas.height - (ray.distance * 20)) /2 , 1, ray.distance * 20)
+			var gHeight = ray.distance * 17 * res;
+			if(debug) ctx.fillRect(x, (canvas.height - gHeight) / 2, 1, gHeight)
 		}
-		//cast a test ray in order to show certain data about what is being looked at
+		
+		//a tester ray
 		var midRay = this.castRay(this.angle);
 		
-		if (debug)
-			info += '<p>CENTRE RAY: dist: ' + parseFloat(midRay.distance).toFixed(3) + ', offset: ' + parseFloat(midRay.offset).toFixed(3) + ', side: ' + midRay.side + '</p>';
+		info += '<p>CENTRE RAY: dist: ' + parseFloat(midRay.distance).toFixed(3) + ', offset: ' + parseFloat(midRay.offset).toFixed(3) +'</p>';
 	};
+	
 	//cast a ray from the player and return certain data about its intersection
 	this.castRay = function (angle) {
-		//initialise data
 		var distance = 0;
 
-		//the current position of the ray's end
 		var rayX = this.x;
 		var rayY = this.y;
+		
 		var hitWall = false;
 		while (!hitWall) {
 
-			//increase the rays position
 			rayX = this.x + (distance * Math.sin(angle));
 			rayY = this.y + (distance * -Math.cos(angle));
 
 			//check the grid square the ray is currently in
 			if (map[Math.floor(rayY)][Math.floor(rayX)] == 1) {
 				hitWall = true;
+				
 				var offsetY = Math.floor(rayY) - rayY;
 				var offsetX = Math.floor(rayX) - rayX;
 				var offset = 0;
@@ -200,13 +196,12 @@ function Player(x, y, angle, fov) {
 					side = 'vertical';
 					offset = offsetY;
 				}
-			
-				//otherwise, it is a horizontal boundary
 				else {
 					side = 'horizontal';
 					offset = offsetX;
 				}
 			}
+			
 			//if no wall is hit, increase distance
 			distance += rayIncrement;
 		}
@@ -216,17 +211,20 @@ function Player(x, y, angle, fov) {
 
 		//create a new rayData object to pass to the renderer
 		var rayData = new Object();
+		
 		rayData.distance = distance;
 		rayData.offset = offset;
 		rayData.side = side;
+		
+		//return the new rayData object
 		return rayData;
 	};
 
-	//draw the hud
 	this.drawHud = function () {
 		ctx.fillStyle = 'black';
 		ctx.fillRect(canvas.width / 2, canvas.height / 2, canvas.height * 0.01, canvas.height * 0.01);
 	};
+
 	//
 	//DEBUGGING
 	//
@@ -237,7 +235,6 @@ function Player(x, y, angle, fov) {
 
 		var squareOffset = -0.5;
 
-		//size of each map grid square
 		var gridWidth = size / map[0].length;
 
 		//map background
@@ -291,7 +288,6 @@ function Enemy(x, y, image) {
 
 }
 
-
 //
 //RUN ONCE
 //
@@ -299,10 +295,9 @@ function initialise(){
 	//create a new player object
 	player = new Player(14.5,18.5 ,0, fov);
 	
-	//set up key bindings
 	initControls();
 	setSize();
-	player.drawScreen();
+	//player.drawScreen();
 	
 	//start the main game loop
 	requestAnimationFrame(mainLoop);
@@ -310,7 +305,6 @@ function initialise(){
 
 //set up key listeners
 function initControls(){
-	//add key listeners
 	window.onkeydown = function(e){
 		var key = e.keyCode;
 		if(key == 87){player.forward = true;}	
@@ -320,7 +314,11 @@ function initControls(){
 
 		if(key == 16){player.sprint = true;}
 		
-		if(key == 113){if(debug){debug = false;}else{debug = true;}}
+		//toggle debug mode
+		if(key == 113){
+			if(debug){debug = false;}
+			else{debug = true;}
+		}
 	}
 	
 	window.onkeyup = function(e){
@@ -334,32 +332,60 @@ function initControls(){
 	} 
 }
 
-//set the resoloution of the canvas
+//set the resolution of the canvas
 function setSize(){
-	ctx.canvas.width = window.innerWidth * 0.5;
-	ctx.canvas.height = window.innerHeight * 0.5;
+	ctx.canvas.width = window.innerWidth * res;
+	ctx.canvas.height = window.innerHeight * res;
 }
+
 //
 //RUN EVERY FRAME
 //
-function update(){
+function update(delta){
 	info = '';
 	
 	//update the player
-	player.update();
+	player.update(delta);
 
-	//redraw the screen
-	player.drawScreen();
-	player.drawHud();
-
-	//redraw the map
-	player.drawMap(10, 10, ctx.canvas.height * 0.3);
-		
+	
 }
 
-function mainLoop(){
-	setSize();
+var time = Date.now();
+var lastTime = Date.now();
 
+var loopTime = 0;
+
+//constantly increasing time counter
+var totalTime = 0;
+
+var fps = 0;
+
+function mainLoop(){
+	
+	//update the current time
+	var time = Date.now();
+
+	//get the time elapsed since the last loop
+	loopTime = time - lastTime;
+	totalTime += loopTime;
+	
+	//update fps every second
+	if(totalTime >= 500){
+		fps = 1000 / loopTime;
+		totalTime = 0;
+	}
+	
+	lastTime = Date.now();
+	
+	//update game objects (longer delta means greater speed etc)
+	update(loopTime);
+	
+	//commented out currently, as very slow
+	//check resolution
+	res = document.getElementById('resSlider').value;
+	setSize();
+	
+	//redraw the frame
 	//draw over the last frame
 	ctx.fillStyle = 'skyblue';
 	ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -367,12 +393,20 @@ function mainLoop(){
 	//draw the floor
 	ctx.fillStyle = 'lightgreen';
 	ctx.fillRect(0, canvas.height / 2, canvas.width, canvas.height);
+
+	//redraw the screen
+	player.drawScreen();
+	player.drawHud();
+
+	//redraw the map
+	player.drawMap(canvas.height * 0.01, canvas.width * 0.01, ctx.canvas.height * 0.3);
 	
-	//game update function
-	update();
 	
 	//display debugging info
-	$('#info').html(info);
+	if(!debug) info = '';
+	info += '<p>FPS: ' + parseInt(fps) + '</p>';
+
+	$('#debug-info').html(info);
 	
 	//recursively call this function
 	requestAnimationFrame(mainLoop);
