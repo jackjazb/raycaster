@@ -7,11 +7,14 @@ var res = 1;
 var player;
 var fov = Math.PI / 1.7;
 
+// var crosshair = new Image();
+// crosshair.src = './textures/crosshair.png';
+
 var wall = new Image();
 wall.src ='./textures/wall.png';
 
 var enemyTex = new Image();
-enemyTex.src = './textures/enemy.png';
+enemyTex.src = './textures/enemy2.png';
 
 var map = [
 	[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
@@ -46,6 +49,13 @@ var debug = false;
 
 //displayed at the bottom of the screen after every update
 var info = '';
+
+var testEnemy = new Enemy(15, 10, enemyTex);
+
+//convert to degrees
+function deg(rad){
+	return rad * (180/Math.PI);
+}
 
 //
 //PLAYER OBJECT
@@ -121,8 +131,8 @@ function Player(x, y, angle, fov) {
 		dy = 0;
 
 		info += '<p>PLAYER POS:  (' + parseFloat(this.x).toFixed(3) + ', ' + parseFloat(this.y).toFixed(3) + ')</p>';
-		info += '<p>ANGLE: ' + parseFloat(this.angle).toFixed(4) + '</p>';
-		info += '<p>FOV: ' + parseFloat(this.fov).toFixed(4) + '</p>';
+		info += '<p>ANGLE: ' + parseFloat(deg(this.angle)).toFixed(3) + '</p>';
+		info += '<p>FOV: ' + parseFloat(deg(this.fov)).toFixed(3) + '</p>';
 	};
 	
 	//
@@ -151,7 +161,7 @@ function Player(x, y, angle, fov) {
 			var wallSlice = (wall.width - 1) * Math.abs(ray.offset);
 
 			//the dimensions of the column to be drawn
-			var columnHeight = canvas.height / ray.distance / 1.7;
+			var columnHeight = canvas.height / ray.distance;
 			var columnY = (canvas.height - columnHeight) / 2;
 
 			ctx.drawImage(wall, wallSlice, 0, 1, wall.height, x, columnY, this.colWidth, columnHeight);
@@ -216,9 +226,64 @@ function Player(x, y, angle, fov) {
 
 	this.drawHud = function () {
 		ctx.fillStyle = 'black';
-		ctx.fillRect(canvas.width / 2, canvas.height / 2, canvas.height * 0.01, canvas.height * 0.01);
+		ctx.fillRect(canvas.width / 2, canvas.height / 2, canvas.height * 0.005, canvas.height * 0.005);
+		
+		// var w = canvas.height *  0.05;
+		// var h = w;
+		// ctx.drawImage(crosshair, (canvas.width / 2) - w / 2, (canvas.height / 2) - h / 2, w , h)
 	};
+	
+	//draw a single enemy sprite
+	this.drawEnemy = function(enemy){
+		//the player's distance from the viewing plane
+		var distFromPlane = (canvas.width / 2) / Math.tan(this.fov / 2);
+		
+		var relX = this.x - enemy.x;
+		var relY = this.y -  enemy.y;
+		
+		var angle = -Math.atan2(relX, relY);
 
+		
+		var dist = Math.sqrt(relX*relX + relY*relY);
+		
+		//check if the enemy is in view
+		//if(angle >= this.angle - (this.fov / 2) - 0.3 && angle <= this.angle + (this.fov / 2) + 0.3){
+			info += '<br><p>ENEMY IN VIEW:</p>'
+			var relAngle = angle - this.angle;
+			
+			//get the sprites distance on the plane from mid (based on similar triangles)
+			var distFromCenter = distFromPlane * Math.tan(relAngle);
+			
+			//calculate relative position on canvas
+			var xPos = (canvas.width / 2) + distFromCenter;
+			
+			//same as the raycasting principle
+			var height = canvas.height / dist;
+			//width * length scale factor
+			var width = enemy.image.width * (height / enemy.image.height);
+			
+			//ie halfway down
+			var yPos = canvas.height / 2 - (height / 2);
+			
+			
+			//check each enemy column relative to starter x against the z buffer, and draw the columns in front of a wall
+			for(var x = 0; x < Math.floor(width); x++){
+				if(dist < this.zBuffer[Math.floor(xPos + x)]){
+					//ctx.drawImage(image, sx, sy, sWidth, sHeight, dx, dy,dWidth, dHeight);
+					ctx.drawImage(enemy.image, x, 0, 1, enemy.image.height, xPos + x*(width/enemy.image.width), yPos, width/enemy.image.width, height);
+				}
+			}
+			
+			info += '<p>img dimensions: ' + parseInt(enemy.image.width) + 'x' + parseInt(enemy.image.height) + '</p>';
+			info += '<p>WIDTH: ' + parseFloat(width).toFixed(3) + ', HEIGHT: ' + parseFloat(height).toFixed(3) + '</p>';
+			
+			//ctx.drawImage(enemy.image, xPos, yPos, width, height);
+			//info += '<p>ZBUFFER ENEMY MID: ' + parseFloat(this.zBuffer[Math.floor(xPos + (width / 2))]).toFixed(3) + '</p>';
+			//info += '<p>REL ANGLE: ' + parseFloat(deg(relAngle).toFixed(3)) + '</p>';
+			info += '<p>DIST: ' + parseFloat(dist).toFixed(3) + '</p>';
+			//info += '<p>ZBUFFER MID: ' + parseFloat(this.zBuffer[Math.floor(canvas.width / 2)]).toFixed(3) + '</p>';
+		//}
+	}
 	//
 	//DEBUGGING
 	//
@@ -262,11 +327,42 @@ function Player(x, y, angle, fov) {
 		ctx.strokeStyle = 'purple';
 		ctx.stroke();
 
+		//draw the test enemy dot
+		ctx.beginPath();
+		ctx.arc(xPos + (testEnemy.x * gridWidth), yPos + (testEnemy.y * gridWidth), gridWidth / 5, 0, 2 * Math.PI, false);
+		ctx.fillStyle = 'red';
+		ctx.fill();
+		ctx.lineWidth = gridWidth/2;
+		ctx.strokeStyle = 'red';
+		ctx.stroke();
+		
 		//draw a line for angle
 		ctx.lineWidth = 1;
 		ctx.beginPath();
 		ctx.moveTo(relPlayerX, relPlayerY);
-		ctx.lineTo(relPlayerX + dirArrLength * Math.sin(player.angle), relPlayerY + dirArrLength * -Math.cos(player.angle));
+		ctx.lineTo(relPlayerX + dirArrLength * Math.sin(this.angle - this.fov /2), relPlayerY + dirArrLength * -Math.cos(this.angle -this.fov / 2));
+		ctx.stroke();	
+		
+		ctx.beginPath();
+		ctx.moveTo(relPlayerX, relPlayerY);
+		ctx.lineTo(relPlayerX + dirArrLength * Math.sin(this.angle + this.fov /2), relPlayerY + dirArrLength * -Math.cos(this.angle + this.fov / 2));
+		ctx.stroke();
+		
+		// ctx.beginPath();
+		// ctx.moveTo(relPlayerX, relPlayerY);
+		// ctx.lineTo(relPlayerX + dirArrLength * Math.sin(this.angle), relPlayerY + dirArrLength * -Math.cos(this.angle));
+		// ctx.stroke();
+		
+		//draw a line to the enemy
+		ctx.beginPath();
+		ctx.moveTo(relPlayerX, relPlayerY);
+		ctx.lineTo(xPos + (testEnemy.x * gridWidth), yPos + (testEnemy.y * gridWidth));
+		ctx.stroke();
+		
+		//a line straight up
+		ctx.beginPath();
+		ctx.moveTo(relPlayerX, relPlayerY);
+		ctx.lineTo(relPlayerX, relPlayerY - 100);
 		ctx.stroke();
 	}
 
@@ -279,6 +375,25 @@ function Enemy(x, y, image) {
 	this.x = x;
 	this.y = y;
 	this.image = image;
+	
+	this.speed = 0.001;
+	
+	this.update = function(delta){
+		var dx = 0;
+		var dy = 0;
+		
+		dx += this.speed * delta;
+		//dy += this.speed * delta;
+		
+		if(map[Math.floor(this.y + dy)][Math.floor(this.x + dx)] != 0){
+			this.speed = -this.speed;
+			dx = dy = 0;
+		}
+		
+		this.x += dx;
+		this.y += dy;
+
+	}
 }
 
 //
@@ -355,7 +470,7 @@ function setSize(){
 function update(delta){
 	//update the player
 	player.update(delta);
-
+	testEnemy.update(delta);
 	
 }
 
@@ -407,11 +522,12 @@ function mainLoop(){
 
 	//redraw the screen
 	player.drawScreen();
+	player.drawEnemy(testEnemy);
 	player.drawHud();
 
 	//redraw the map
 	player.drawMap(canvas.height * 0.01, canvas.width * 0.01, ctx.canvas.height * 0.3);
-	
+
 	
 	//display debugging info
 	if(!debug) info = '';
