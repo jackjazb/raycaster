@@ -1,47 +1,46 @@
 var canvas = document.getElementById('canvas');
 var ctx = canvas.getContext('2d');
 
-//resolution relative to monitor res
-var res = 1;
-
 var player;
 var fov = Math.PI / 1.7;
 
-// var crosshair = new Image();
-// crosshair.src = './textures/crosshair.png';
-
 var wall = new Image();
 wall.src ='./textures/wall.png';
+var win = new Image();
+win.src = './textures/win.png';
 
-var enemyTex = new Image();
-enemyTex.src = './textures/enemy2.png';
+var spriteWalk1 = new Image();
+spriteWalk1.src = './textures/enemy2.png';
+var spriteWalk2 = new Image();
+spriteWalk2.src = './textures/enemy2.png';
+
+var spriteAnimList = [spriteWalk1, spriteWalk2];
 
 var map = [
-	[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-	[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-	[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-	[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-	[1,1,1,1,0,0,1,1,1,1,1,0,0,0,1,0,1,0,1,0,0,0,0,1],
-	[1,1,0,1,1,1,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1],
-	[1,1,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,0,1],
-	[1,1,0,1,1,1,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1],
-	[1,1,1,1,0,0,1,1,0,1,1,0,0,0,1,0,1,0,1,0,0,0,0,1],
-	[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-	[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-	[1,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,1,1,1,1,0,0,0,1],
-	[1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,1],
-	[1,0,0,0,0,0,0,0,0,1,0,1,1,0,0,0,1,1,0,1,0,0,0,1],
-	[1,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,1,0,1,0,0,0,1],
-	[1,1,1,1,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,1,0,0,0,1],
-	[1,1,1,1,0,0,1,1,1,1,0,1,0,0,0,0,0,1,0,1,0,0,0,1],
-	[1,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,1,0,0,0,1],
-	[1,0,0,0,0,0,0,0,1,1,0,1,0,0,0,0,0,1,0,1,0,0,0,1],
-	[1,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,1,0,0,0,1],
-	[1,0,0,1,0,1,0,0,1,1,0,1,0,1,0,1,0,1,0,1,0,0,0,1],
-	[1,0,1,0,0,0,1,0,1,1,0,0,0,0,0,0,0,0,0,1,0,0,0,1],
-	[1,0,0,1,0,1,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,1],
-	[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-	[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+	[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+	[1,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,1],	
+	[1,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,1],
+	[1,1,1,1,1,1,1,1,0,0,0,1,1,1,1,1,1,1,1],
+	[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+	[1,0,1,0,1,0,0,1,1,1,1,1,0,0,1,0,1,0,1],
+	[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+	[1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1],
+	[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+	[1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1],
+	[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+	[1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1],
+	[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+	[1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1],
+	[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+	[1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1],
+	[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+	[1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1],
+	[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+	[1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1],
+	[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+	[1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1],
+	[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+	[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
 ];
 
 //debug toggle
@@ -50,7 +49,7 @@ var debug = false;
 //displayed at the bottom of the screen after every update
 var info = '';
 
-var testEnemy = new Enemy(15, 10, enemyTex);
+var enemy = new Sprite(9.5, 10, 100	, spriteAnimList);
 
 //convert to degrees
 function deg(rad){
@@ -64,6 +63,7 @@ function Player(x, y, angle, fov) {
 	this.x = x;
 	this.y = y;
 	this.angle = angle;
+	
 	this.fov = fov;
 	var turnSpeed = 0.05;
 	var speed = 0.03;
@@ -83,6 +83,11 @@ function Player(x, y, angle, fov) {
 	this.colWidth = 1;
 	
 	this.zBuffer = [];
+	var spriteBuffer = [];
+	
+	//shooty stuff
+	var shotDelay = 100;
+	var shotTimer = 0;
 	
 	//
 	//CONTROL
@@ -127,14 +132,42 @@ function Player(x, y, angle, fov) {
 			this.y += dy;
 		}
 		
+		//check for enemy collisions
+		if(this.x + dx > player.x - 0.4 && this.x + dx < player.x + 0.4){
+			dx = 0;
+		}		
+		if(this.y + dy > player.y - 0.4 && this.y + dy < player.y + 0.4){
+			dy = 0;
+		}
+		
 		dx = 0;
 		dy = 0;
+		
+		//shoot
+		if(this.fire && !enemy.dead){
+			shotTimer += delta;
 
+			if(shotTimer >= shotDelay){
+				this.shoot();
+				shotTimer = 0;
+			}
+		}
 		info += '<p>PLAYER POS:  (' + parseFloat(this.x).toFixed(3) + ', ' + parseFloat(this.y).toFixed(3) + ')</p>';
 		info += '<p>ANGLE: ' + parseFloat(deg(this.angle)).toFixed(3) + '</p>';
 		info += '<p>FOV: ' + parseFloat(deg(this.fov)).toFixed(3) + '</p>';
 	};
 	
+	this.fire = false;
+	//shoot a ray (as a shot)
+	this.shoot = function(){
+		
+		//if the middle of the canvas is between the first and last sprite col values, a hit has occured
+		if(spriteBuffer[0] < canvas.width/2 && spriteBuffer[spriteBuffer.length -1] > canvas.width / 2){
+			console.log('hit');
+			enemy.health -= 1;
+		}
+
+	};
 	//
 	//RENDERING
 	//
@@ -146,7 +179,7 @@ function Player(x, y, angle, fov) {
 		this.zBuffer = [];
 		
 		//iterate over columns on the viewing plane
-		for (x = 0; x < canvas.width; x += this.colWidth) {
+		for (x = 0; x < canvas.width; x += 1) {
 			//calculate the position of this ray relative to the center (ie the value of opp)
 			var distFromCenter = x - (canvas.width / 2);
 
@@ -157,19 +190,21 @@ function Player(x, y, angle, fov) {
 			//add the returned distanc to the zbuffer
 			this.zBuffer.push(ray.distance);
 			
-			//the x position of the texture slice to take, based on the percentage through the wall this ray is
-			var wallSlice = (wall.width - 1) * Math.abs(ray.offset);
+			if(x % (this.colWidth) == 0){
+				//the x position of the texture slice to take, based on the percentage through the wall this ray is
+				var wallSlice = (wall.width - 1) * Math.abs(ray.offset);
 
-			//the dimensions of the column to be drawn
-			var columnHeight = canvas.height / ray.distance;
-			var columnY = (canvas.height - columnHeight) / 2;
+				//the dimensions of the column to be drawn
+				var columnHeight = canvas.height / ray.distance;
+				var columnY = (canvas.height - columnHeight) / 2;
 
-			ctx.drawImage(wall, wallSlice, 0, 1, wall.height, x, columnY, this.colWidth, columnHeight);
+				ctx.drawImage(wall, wallSlice, 0, 1, wall.height, x, columnY, this.colWidth, columnHeight);
 
-			//debugging thing - shows the distance returned by each ray
-			ctx.fillStyle = 'rgba(0, 0, 255, 0.5)';
-			var gHeight = ray.distance * 17 * res;
-			if(debug) ctx.fillRect(x, (canvas.height - gHeight) / 2, 1, gHeight)
+				//debugging thing - shows the distance returned by each ray
+				ctx.fillStyle = 'rgba(0, 0, 255, 0.5)';
+				var gHeight = ray.distance * 17;
+				if(debug) ctx.fillRect(x, (canvas.height - gHeight) / 2, 1, gHeight)
+			}
 		}		
 	};
 	
@@ -227,63 +262,71 @@ function Player(x, y, angle, fov) {
 	this.drawHud = function () {
 		ctx.fillStyle = 'black';
 		ctx.fillRect(canvas.width / 2, canvas.height / 2, canvas.height * 0.005, canvas.height * 0.005);
-		
-		// var w = canvas.height *  0.05;
-		// var h = w;
-		// ctx.drawImage(crosshair, (canvas.width / 2) - w / 2, (canvas.height / 2) - h / 2, w , h)
 	};
 	
-	//draw a single enemy sprite
-	this.drawEnemy = function(enemy){
+	//draw a single sprite
+	this.drawSprite = function(sprite){	
 		//the player's distance from the viewing plane
 		var distFromPlane = (canvas.width / 2) / Math.tan(this.fov / 2);
 		
-		var relX = this.x - enemy.x;
-		var relY = this.y -  enemy.y;
+		var relX = this.x - sprite.x;
+		var relY = this.y -  sprite.y;
 		
 		var angle = -Math.atan2(relX, relY);
+		sprite.angle = 2*Math.PI-angle;
+		if(angle < 0){
+			angle = Math.PI + (angle + Math.PI);
+		}
 
-		
 		var dist = Math.sqrt(relX*relX + relY*relY);
+
+		var relAngle = angle - this.angle;
 		
-		//check if the enemy is in view
-		//if(angle >= this.angle - (this.fov / 2) - 0.3 && angle <= this.angle + (this.fov / 2) + 0.3){
-			info += '<br><p>ENEMY IN VIEW:</p>'
-			var relAngle = angle - this.angle;
-			
-			//get the sprites distance on the plane from mid (based on similar triangles)
-			var distFromCenter = distFromPlane * Math.tan(relAngle);
-			
-			//calculate relative position on canvas
-			var xPos = (canvas.width / 2) + distFromCenter;
-			
-			//same as the raycasting principle
-			var height = canvas.height / dist;
-			//width * length scale factor
-			var width = enemy.image.width * (height / enemy.image.height);
-			
-			//ie halfway down
-			var yPos = canvas.height / 2 - (height / 2);
-			
-			
-			//check each enemy column relative to starter x against the z buffer, and draw the columns in front of a wall
-			for(var x = 0; x < Math.floor(width); x++){
-				if(dist < this.zBuffer[Math.floor(xPos + x)]){
-					//ctx.drawImage(image, sx, sy, sWidth, sHeight, dx, dy,dWidth, dHeight);
-					ctx.drawImage(enemy.image, x, 0, 1, enemy.image.height, xPos + x*(width/enemy.image.width), yPos, width/enemy.image.width, height);
+		//adjust distance to fit flat plane
+		dist *= Math.cos(relAngle);
+		
+		//get the sprites distance on the plane from mid (based on similar triangles)
+		var distFromCenter = distFromPlane * Math.tan(relAngle);
+
+		//same as the raycasting principle
+		var height = canvas.height / dist;
+		
+		//width * length scale factor
+		var width = sprite.image.width * (height / sprite.image.height);
+		
+		spriteWidth = width;
+		//increase slice width for low res images
+		var sliceWidth = 1;
+		if(sprite.image.width < width){
+			sliceWidth = width/sprite.image.width;
+		}
+		
+		//calculate relative position on canvas
+		var xPos = (canvas.width / 2) + distFromCenter;
+		
+		//ie halfway down
+		var yPos = canvas.height / 2 - (height / 2);
+		
+		
+		//reset the sprite buffer
+		spriteBuffer = [];
+		info += '<p>ANGLE: ' + parseFloat(deg(angle)).toFixed(2) + '</p>';
+		
+		//if in front of player
+		if(dist > 0){
+			//check each sprite column relative to starter x against the z buffer, and draw the columns in front of a wall
+			for(var x = 0; x < Math.floor(sprite.image.width); x++){
+				
+				//get actual distance from player to column
+				if(dist < this.zBuffer[Math.floor(xPos + x * (width/sprite.image.width) - width/2)]){
+					spriteBuffer.push((xPos + x * (width/sprite.image.width)) - width/2);
+					//ctx.drawImage(image, sx, sy, sWidth, sHeight, dx, dy,dWidth, dHeight); //-width/2 in order to centre sprite on axis
+					ctx.drawImage(sprite.image, x, 0, 1, sprite.image.height, (xPos + x * (width/sprite.image.width)) - width/2, yPos, sliceWidth, height);
 				}
 			}
-			
-			info += '<p>img dimensions: ' + parseInt(enemy.image.width) + 'x' + parseInt(enemy.image.height) + '</p>';
-			info += '<p>WIDTH: ' + parseFloat(width).toFixed(3) + ', HEIGHT: ' + parseFloat(height).toFixed(3) + '</p>';
-			
-			//ctx.drawImage(enemy.image, xPos, yPos, width, height);
-			//info += '<p>ZBUFFER ENEMY MID: ' + parseFloat(this.zBuffer[Math.floor(xPos + (width / 2))]).toFixed(3) + '</p>';
-			//info += '<p>REL ANGLE: ' + parseFloat(deg(relAngle).toFixed(3)) + '</p>';
-			info += '<p>DIST: ' + parseFloat(dist).toFixed(3) + '</p>';
-			//info += '<p>ZBUFFER MID: ' + parseFloat(this.zBuffer[Math.floor(canvas.width / 2)]).toFixed(3) + '</p>';
-		//}
+		}
 	}
+	
 	//
 	//DEBUGGING
 	//
@@ -316,7 +359,7 @@ function Player(x, y, angle, fov) {
 		var relPlayerY = yPos + (player.y * gridWidth);
 
 		//the length of the angle indicator
-		var dirArrLength = gridWidth * 1.5;
+		var dirArrLength = gridWidth * 1;
 
 		//draw a dot for the player
 		ctx.beginPath();
@@ -329,7 +372,7 @@ function Player(x, y, angle, fov) {
 
 		//draw the test enemy dot
 		ctx.beginPath();
-		ctx.arc(xPos + (testEnemy.x * gridWidth), yPos + (testEnemy.y * gridWidth), gridWidth / 5, 0, 2 * Math.PI, false);
+		ctx.arc(xPos + (enemy.x * gridWidth), yPos + (enemy.y * gridWidth), gridWidth / 5, 0, 2 * Math.PI, false);
 		ctx.fillStyle = 'red';
 		ctx.fill();
 		ctx.lineWidth = gridWidth/2;
@@ -340,59 +383,87 @@ function Player(x, y, angle, fov) {
 		ctx.lineWidth = 1;
 		ctx.beginPath();
 		ctx.moveTo(relPlayerX, relPlayerY);
-		ctx.lineTo(relPlayerX + dirArrLength * Math.sin(this.angle - this.fov /2), relPlayerY + dirArrLength * -Math.cos(this.angle -this.fov / 2));
+		ctx.lineTo(relPlayerX + dirArrLength * Math.sin(this.angle), relPlayerY + dirArrLength * -Math.cos(this.angle));
 		ctx.stroke();	
-		
-		ctx.beginPath();
-		ctx.moveTo(relPlayerX, relPlayerY);
-		ctx.lineTo(relPlayerX + dirArrLength * Math.sin(this.angle + this.fov /2), relPlayerY + dirArrLength * -Math.cos(this.angle + this.fov / 2));
-		ctx.stroke();
-		
-		// ctx.beginPath();
-		// ctx.moveTo(relPlayerX, relPlayerY);
-		// ctx.lineTo(relPlayerX + dirArrLength * Math.sin(this.angle), relPlayerY + dirArrLength * -Math.cos(this.angle));
-		// ctx.stroke();
-		
-		//draw a line to the enemy
-		ctx.beginPath();
-		ctx.moveTo(relPlayerX, relPlayerY);
-		ctx.lineTo(xPos + (testEnemy.x * gridWidth), yPos + (testEnemy.y * gridWidth));
-		ctx.stroke();
-		
-		//a line straight up
-		ctx.beginPath();
-		ctx.moveTo(relPlayerX, relPlayerY);
-		ctx.lineTo(relPlayerX, relPlayerY - 100);
-		ctx.stroke();
 	}
 
 }
 
 //
-//ENEMY OBJECT
+//SPRITE OBJECT
 //
-function Enemy(x, y, image) {
+function Sprite(x, y, health, spriteAnimList) {
+	var maxHealth = health;
+	this.health = health;
+	this.dead = false;
+	
 	this.x = x;
 	this.y = y;
-	this.image = image;
 	
-	this.speed = 0.001;
+	this.angle = 0;
+	
+	this.image = spriteAnimList[0];
+	
+	this.speed = 0.04;
+	
+	//delay between frames
+	var animSpeed = 300;
+	
+	var counter = 0
+	
+	var healthBarWidth = 600;
 	
 	this.update = function(delta){
-		var dx = 0;
-		var dy = 0;
-		
-		dx += this.speed * delta;
-		//dy += this.speed * delta;
-		
-		if(map[Math.floor(this.y + dy)][Math.floor(this.x + dx)] != 0){
-			this.speed = -this.speed;
-			dx = dy = 0;
+		if(this.health <= 0){
+			this.dead = true;
 		}
-		
-		this.x += dx;
-		this.y += dy;
+		else{
+				counter += delta;
+			if(counter >= animSpeed){
+				if(this.image == spriteAnimList[0]){
+					this.image = spriteAnimList[1];
+				}
+				else{
+					this.image = spriteAnimList[0];
+				}
+				counter = 0;
+			}
 
+			var dx = 0;
+			var dy = 0;
+			
+			dx += this.speed * Math.sin(this.angle);
+			dy += this.speed * Math.cos(this.angle);
+			
+			//x and y col
+			if(map[Math.floor(this.y)][Math.floor(this.x + dx)] != 0){
+				dx = 0;
+			}
+			if(map[Math.floor(this.y + dy)][Math.floor(this.x)] != 0){
+				dy = 0;
+			}
+			
+			if(this.x + dx > player.x - 0.4 && this.x + dx < player.x + 0.4){
+				dx = 0;
+			}		
+			if(this.y + dy > player.y - 0.4 && this.y + dy < player.y + 0.4){
+				dy = 0;
+			}
+			
+			this.x += dx;
+			this.y += dy;
+		}
+	}
+	
+	this.drawHealthBar = function(){
+		var hX = (canvas.width / 2) - healthBarWidth/2;
+		var hY = 20;
+		ctx.fillStyle = 'black';
+		ctx.fillRect(hX, hY, healthBarWidth, 30);
+		if(this.health >= 0){
+			ctx.fillStyle = 'red';
+			ctx.fillRect(hX, hY, healthBarWidth * (this.health/maxHealth), 30);	
+		}
 	}
 }
 
@@ -401,7 +472,7 @@ function Enemy(x, y, image) {
 //
 function initialise(){
 	//create a new player object
-	player = new Player(14.5,18.5 ,0, fov);
+	player = new Player(9.5,1 ,Math.PI, fov);
 	
 	initControls();
 	
@@ -438,6 +509,8 @@ function initControls(){
 	} 
 	
 	document.addEventListener('mousemove', mouseUpdate, false);
+	canvas.addEventListener('mousedown', function(){player.fire = true}, false);
+	canvas.addEventListener('mouseup', function(){player.fire = false}, false);
 }
 
 //mouse look controls
@@ -460,8 +533,8 @@ canvas.onclick = function() {
 
 //set the resolution of the canvas
 function setSize(){
-	ctx.canvas.width = window.innerWidth * res;
-	ctx.canvas.height = window.innerHeight * res;
+	ctx.canvas.width = window.innerWidth;
+	ctx.canvas.height = window.innerHeight;
 }
 
 //
@@ -470,7 +543,9 @@ function setSize(){
 function update(delta){
 	//update the player
 	player.update(delta);
-	testEnemy.update(delta);
+	if(!enemy.dead){
+		enemy.update(delta);
+	}
 	
 }
 
@@ -484,7 +559,6 @@ var totalTime = 0;
 var fps = 0;
 
 function mainLoop(){
-	
 
 	//update the current time
 	var time = Date.now();
@@ -508,9 +582,8 @@ function mainLoop(){
 	update(loopTime);
 	
 	//check resolution
-	res = document.getElementById('resSlider').value;
 	setSize();
-	info += '<p>RESOLUTION: ' + parseInt(canvas.width) + 'x' + parseInt(canvas.height) + ' [x' + res +']</p>';
+	info += '<p>RESOLUTION: ' + parseInt(canvas.width) + 'x' + parseInt(canvas.height) + '</p>';
 	
 	//draw over the last frame
 	ctx.fillStyle = 'skyblue';
@@ -522,12 +595,20 @@ function mainLoop(){
 
 	//redraw the screen
 	player.drawScreen();
-	player.drawEnemy(testEnemy);
+	
+	//draw enemies
+	if(!enemy.dead){
+		player.drawSprite(enemy);	
+	}
 	player.drawHud();
-
+	enemy.drawHealthBar();
 	//redraw the map
 	player.drawMap(canvas.height * 0.01, canvas.width * 0.01, ctx.canvas.height * 0.3);
 
+	if(enemy.dead){
+		ctx.drawImage(win, 0, 0, canvas.width, canvas.height);
+		//ctx.drawImage(win, (canvas.width/2) - win.width/2, (canvas.height/2) - win.height/2);
+	}
 	
 	//display debugging info
 	if(!debug) info = '';
